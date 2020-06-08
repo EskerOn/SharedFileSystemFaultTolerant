@@ -48,20 +48,13 @@ class Client():
         try:
             while True :
                 message = self.client.recv(1024)
-                #aux=pickle.loads(message)
                 message = decodeJSON(message)
                 if message['type'] == messageType['login']:
-                    #self.window.addClient(message['content'])
                     Notitfication("Usuario conectado", "El usuario {} se ha conectado con el servidor".format(message['content']))   
-                    self.window.actualizarContactos(message['content'], "")
-                if message['type'] == messageType['private']:
-                    fin = message['content'].find("]")
-                    sender = message['content'][2:fin]
-                    Notitfication("Nuevo mensaje de {}".format(sender), message['content'][fin+2:])
-                    self.window.reciveMessageFrom(message['content'])
+                    self.online_clients = message['content']
+                    self.window.actualizarContactos()
                 if message['type'] == messageType['info']:
                     self.online_clients = message['content']
-                    self.sendclients()
                 if message['type'] == messageType['request']:
                     print("llego la petición")
                     if "OK" in message['content']:
@@ -75,7 +68,6 @@ class Client():
                     else:
                         Notitfication("Solicitud de tranferencia de archivo", message['content'])
                         if self.window.askmsg("Aviso!", message['content']):
-                            #port_udp = 1919#random.randint(25, 50)
                             port_tcp = 5001
                             reciverThread = threading.Thread(target=self.createUDPReciver, args= (port_tcp, ))
                             reciverThread.start()
@@ -179,6 +171,7 @@ class Client():
         print(self.backup)
 
     def setWindow(self, win):
+        print("ventana añadida")
         self.window = win
         #self.window.updateList()
 
@@ -186,12 +179,6 @@ class Client():
         try:
             self.file_udp = title
             self.client.send(encodeJSON(messageType['request'], os.path.basename(title), destin))
-        except ConnectionError:
-            self.repair()
-
-    def sendMessageTo(self, msg, reciver):
-        try:
-            self.client.send(encodeJSON(messageType['private'], msg, reciver))
         except ConnectionError:
             self.repair()
 
@@ -206,7 +193,8 @@ class Client():
                 return self.online_clients.split(" ")
         except ConnectionError:
             self.repair()
-    def sendclients(self):
+
+    def updateclients(self):
         print("clientes a enviar: "+ self.online_clients)
         if self.online_clients == "None":
             return None
@@ -215,17 +203,10 @@ class Client():
 
     def disconect(self):
         self.client.send(encodeJSON(messageType['logout']))
-        #self.window.popupmsg("Desconeccion de un cleinte", "El usuario {} ha dejado el servidor".format(self.user))
         Notitfication("Desconeccion de usuario", "El usuario {} se ha desconectado del servidor".format(self.user))
     
     def repair(self):
-        self.client.close()
-        x = threading.Thread(target=subprocess.run(), args=(["py", "server.py", "-i","192.168.8.2", "-p","1909"]))
-        x.start()
-        try:
-            self.client.connect(("192.168.8.2"), 1909)
-        except ConnectionError:
-            self.client.connect(("192.168.8.6"), 1909)
+        pass
         
     
     def setUserName(self, username):
