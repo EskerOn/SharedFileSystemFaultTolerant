@@ -334,12 +334,6 @@ class MainApp(Frame):
         else:
             pass
 
-    
-    def updateList(self):
-        onlineClients = socketclient.getAllUsers()
-        if onlineClients:
-            connectUsers = [user for user in onlineClients if user != username]
-
     def backDirectory(self):
         if(self.current_tab != None):
             self.current_tab.backDirectory()

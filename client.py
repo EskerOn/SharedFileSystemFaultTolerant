@@ -182,20 +182,7 @@ class Client():
         except ConnectionError:
             self.repair()
 
-    def getAllUsers(self):
-        try:
-            self.client.send(encodeJSON(messageType['info'], "users"))
-            time.sleep(0.2)
-            print("clientes: "+ self.online_clients)
-            if self.online_clients == "None":
-                return None
-            else:
-                return self.online_clients.split(" ")
-        except ConnectionError:
-            self.repair()
-
     def updateclients(self):
-        print("clientes a enviar: "+ self.online_clients)
         if self.online_clients == "None":
             return None
         else:
