@@ -31,112 +31,66 @@ socketcreated = False
 IMG_WIDTH = 70
 IMG_HEIGHT = 70
 MAX_COLUMNS = 4
-'''
-#FILE IMAGE
-fileImg = ImageTk.Image.open(os.getcwd() + r"\res\file.png");
-#FOLDER IMAGE
-folderImg = ImageTk.Image.open(os.getcwd() + r"\res\folder.png").resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-#AUDIO IMAGE
-img = ImageTk.Image.open(os.getcwd() + r"\res\audio_file.png")
-img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-audioImg = img#ImageTk.PhotoImage(img);
-#PDF IMAGE
-img = ImageTk.Image.open(os.getcwd() + r"\res\pdf_file.png")
-img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-pdfImg = img#ImageTk.PhotoImage(img);
-#IMAGE IMAGE
-img = ImageTk.Image.open(os.getcwd() + r"\res\image_file.png")
-img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-imgImg = img#ImageTk.PhotoImage(img);
-#TEXT IMAGE
-img = ImageTk.Image.open(os.getcwd() + r"\res\text_file.png")
-img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-txtImg = img#ImageTk.PhotoImage(img);
-#CODE IMAGE
-img = ImageTk.Image.open(os.getcwd() + r"\res\code_file.png")
-img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-codeImg = img#ImageTk.PhotoImage(img);
-#EXEL IMAGE
-img = ImageTk.Image.open(os.getcwd() + r"\res\exel_file.png")
-img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-exelImg = img#ImageTk.PhotoImage(img);
-#WORD IMAGE
-img = ImageTk.Image.open(os.getcwd() + r"\res\word_file.png")
-img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-wordImg = img#ImageTk.PhotoImage(img);
-#POWER IMAGE
-img = ImageTk.Image.open(os.getcwd() + r"\res\powerpoint_file.png")
-img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-poweImg = img#ImageTk.PhotoImage(img);
-#VIDEO IMAGE
-img = ImageTk.Image.open(os.getcwd() + r"\res\video_file.png")
-img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-videoImg = img#ImageTk.PhotoImage(img);
-#ZIP IMAGE
-img = ImageTk.Image.open(os.getcwd() + r"\res\zip_file.png")
-img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-zipImg = img#ImageTk.PhotoImage(img);
 
-'''
 #FILE IMAGE
 img = Image.open(os.getcwd() + r"\res\file.png")
 img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-fileImg = ImageTk.PhotoImage(img);
+fileImg = ImageTk.PhotoImage(img)
 
 #FOLDER IMAGE
 img = Image.open(os.getcwd() + r"\res\folder.png")
 img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-folderImg = ImageTk.PhotoImage(img);
+folderImg = ImageTk.PhotoImage(img)
 
 #AUDIO IMAGE
 img = Image.open(os.getcwd() + r"\res\audio_file.png")
 img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-audioImg = ImageTk.PhotoImage(img);
+audioImg = ImageTk.PhotoImage(img)
 
 #PDF IMAGE
 img = Image.open(os.getcwd() + r"\res\pdf_file.png")
 img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-pdfImg = ImageTk.PhotoImage(img);
+pdfImg = ImageTk.PhotoImage(img)
 
 #IMAGE IMAGE
 img = Image.open(os.getcwd() + r"\res\image_file.png")
 img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-imgImg = ImageTk.PhotoImage(img);
+imgImg = ImageTk.PhotoImage(img)
 
 #TEXT IMAGE
 img = Image.open(os.getcwd() + r"\res\text_file.png")
 img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-txtImg = ImageTk.PhotoImage(img);
+txtImg = ImageTk.PhotoImage(img)
 
 #CODE IMAGE
 img = Image.open(os.getcwd() + r"\res\code_file.png")
 img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-codeImg = ImageTk.PhotoImage(img);
+codeImg = ImageTk.PhotoImage(img)
 
 #EXEL IMAGE
 img = Image.open(os.getcwd() + r"\res\exel_file.png")
 img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-exelImg = ImageTk.PhotoImage(img);
+exelImg = ImageTk.PhotoImage(img)
 
 #WORD IMAGE
 img = Image.open(os.getcwd() + r"\res\word_file.png")
 img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-wordImg = ImageTk.PhotoImage(img);
+wordImg = ImageTk.PhotoImage(img)
 
 #POWER IMAGE
 img = Image.open(os.getcwd() + r"\res\powerpoint_file.png")
 img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-poweImg = ImageTk.PhotoImage(img);
+poweImg = ImageTk.PhotoImage(img)
 
 #VIDEO IMAGE
 img = Image.open(os.getcwd() + r"\res\video_file.png")
 img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-videoImg = ImageTk.PhotoImage(img);
+videoImg = ImageTk.PhotoImage(img)
 
 #ZIP IMAGE
 img = Image.open(os.getcwd() + r"\res\zip_file.png")
 img = img.resize((IMG_WIDTH, IMG_HEIGHT), Image.ANTIALIAS)
-zipImg = ImageTk.PhotoImage(img);
+zipImg = ImageTk.PhotoImage(img)
 
 # ------------------- [ENDS GLOBAL VARIABLES] -------------------
 
@@ -287,16 +241,6 @@ class MainApp(Frame):
         #self.tabsFrame.pack(fill = 'both', side = LEFT)
         self.tabsFrame.grid(row = 0, column = 0, columnspan = 2)
         self.tabsFrame.bind("<<NotebookTabChanged>>", self.changeTab)
-        '''
-        myTab = ScrollableFrame(self.tabsFrame)
-        tab1 = FileExplorer(myTab.scrollable_frame, self.computer.tree)
-        self.tabs.append(tab1)
-        tab1.pack()
-        myTab2 = ScrollableFrame(self.tabsFrame)
-        self.tabs.append(FileExplorer(myTab2.scrollable_frame, self.computer2.tree).pack(fill = 'both'))
-        self.tabsFrame.add(myTab, text = self.computer.name)
-        self.tabsFrame.add(myTab2, text = self.computer2.name)
-        '''
         self.initTabs(self)
         self.current_tab = self.tabs[0]
         print("n tabs = ", len(self.tabs))
@@ -340,13 +284,10 @@ class MainApp(Frame):
         tab.pack()
         self.tabsFrame.add(myTab, text = pc.name)
 
-    def actualizarContactos(self, addname, removename):
+    def actualizarContactos(self):
         global username, socketclient
         print("actualizando contactos")
-        onlineClients = socketclient.getAllUsers()
-        on2= socketclient.sendclients()
-        print(onlineClients)
-        print(on2)
+        onlineClients= socketclient.updateclients()
         time.sleep(0.5)
         connectUsers = []
         if onlineClients!=None:
@@ -357,12 +298,6 @@ class MainApp(Frame):
                     connectUsers.append(user)
                     self.addClient(user)
                     self.addTabs(newpc, self)
-        if (addname not in connectUsers) and addname!="":
-            newpc=Computer(addname, None)
-            self.computers.append(newpc)  #### se agregan los arboles de los clientes 
-            connectUsers.append(addname)
-            self.addClient(addname)
-            self.addTabs(newpc, self)
         print("Contactos actualizados: ")
         for pc in self.computers:
             print(pc.name)
@@ -374,7 +309,7 @@ class MainApp(Frame):
             self.tabs.append(tab)
             tab.pack()
             self.tabsFrame.add(myTab, text = computer.name)
-        self.actualizarContactos("", "")
+        self.actualizarContactos()
 
     def askmsg(self, titl, msg):
         return messagebox.askyesno(message=msg, title=titl)

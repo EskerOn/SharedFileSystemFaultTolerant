@@ -50,7 +50,7 @@ class Server():
         print("Server en la IP : {} PORT : {} para {} conexiones".format(self.HOST, self.PORT, self.MAX_CONNECTIONS))
         
         self.clients = dict()
-        self.rooms = dict()
+        #self.rooms = dict()
         self.clientsSem = threading.Lock()
 
         while True :
@@ -58,8 +58,8 @@ class Server():
                 connection, addr = self.server.accept()
                 self.clientsSem.acquire()
                 self.clients[connection] = ""
-                backup.append(addr[0])
-                print(addr[0])
+                backup.append(addr)
+                print(addr)
                 self.clientsSem.release()
                 print("{} conectado con puerto {}".format(*addr))
                 self.myThread = threading.Thread(target= self.clientThread, args=(connection, addr))
@@ -75,9 +75,6 @@ class Server():
     def clientThread(self, connection, addr):
         while True:
             try:
-                #if len(backup)>0:
-                #   data_string = pickle.dumps(backup)
-                #  connection.send(data_string)
                 message = connection.recv(1024)
                 message = decodeJSON(message)
                 messagetype = message['type']
@@ -96,19 +93,12 @@ class Server():
                         self.clients[connection] = username
                         self.broadcast(encodeJSON(messageType['login'], "{}".format(username)), connection)
                         time.sleep(1.0)
-                        self.broadcast(encodeJSON(messageType['private'], ">[{}] is online!".format(username)), connection)
+                        #self.broadcast(encodeJSON(messageType['private'], ">[{}] is online!".format(username)), connection)
                         connection.send(encodeJSON(messageType['info'], self.getAllUsers()))
                         self.broadcast(encodeJSON(messageType['info'], self.getAllUsers()), connection)
                         print("Usuario {} registrado".format(username))
                     self.clientsSem.release()
                 #chatroom
-                elif messagetype == messageType['chatroom']:
-                    if message['content'] == "NEW" :
-                        self.rooms[message['target']] = dict()
-                    else :
-                        self.sendRoomMessage(message['target'], self.clients[connection], message['content'])
-
-                #Request
                 elif messagetype == messageType['request']:
                     #self.backup(encodeJSON(messageType['back'], self.getbackup()))
                     if "OK" in message['content']:
@@ -147,19 +137,6 @@ class Server():
                         connection.send(encodeJSON(messageType['info'], self.getAllUsers()))
                         self.clientsSem.release()
                         time.sleep(0.5)
-                #Private chat
-                elif messagetype == messageType['private']:
-                    reciver = message['target']
-                    self.clientsSem.acquire()
-                    reciver = self.getUserFromName(reciver)
-                    #self.backup(encodeJSON(messageType['back'], self.getbackup()))
-                    print("El usuario [{}] ha enviado un mesaje al usuario[{}]".format(self.clients[connection], self.clients[reciver]))
-                    self.clientsSem.release()
-                    if reciver :
-                        try:
-                            reciver.send(encodeJSON(messageType['private'], ">[{}]: {}".format(self.clients[connection], message['content'])))
-                        except :
-                            connection.send(encodeJSON(messageType['error'], ">Failed to send message to {}".format(message['target'])))
                 #logout
                 elif messagetype == messageType['logout']:
                     self.clientsSem.acquire()
@@ -168,11 +145,6 @@ class Server():
                     self.broadcast(encodeJSON(messageType['logout'], "{}".format(username)), connection)
                     self.clientsSem.release()
                     break
-                #Global chatroom.
-                elif messagetype == messageType['public'] :
-                    self.clientsSem.acquire()
-                    self.broadcast(encodeJSON(messageType['public'], ">[{}] : {}".format(self.clients[connection], message['content'])), connection)
-                    self.clientsSem.release()
             except:
                 pass
 
@@ -236,11 +208,6 @@ class Server():
             return usern
         else :
             return "ws"
-
-    def sendRoomMessage(self, room, sender, message):
-        for user, connection in room:
-            if user != sender:
-                self.server.send(encodeJSON(messageType['chatroom'], message, room), connection)
 if __name__ == "__main__":           
     parseArgs()
     server = Server(ip_address,int(port))
