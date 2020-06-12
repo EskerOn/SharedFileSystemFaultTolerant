@@ -35,7 +35,7 @@ class Server():
 
         self.HOST = ip
         self.PORT = port
-        self.MAX_CONNECTIONS = 50
+        self.MAX_CONNECTIONS = 4
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.server.bind(("", self.PORT))
