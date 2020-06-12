@@ -10,7 +10,8 @@ class FileNode():
         
 
 class FileTree():
-    def __init__(self, name):
+    def __init__(self, path : str, name : str):
+        self.path = path
         self.name = name
         self.directories = []
         self.files = []
@@ -34,13 +35,26 @@ class FileTree():
                 return file
         return None
 
+    def updateTree(self, news, olds):
+        for new_f in news:
+            if os.path.isdir(self.path + "\\" + new_f):
+                self.addDir(FileTree.createFromPath(self.path + "\\" + new_f))
+            else :
+                absPath = self.path + "\\" + new_f
+                atribs = getFileAttribs(absPath)
+                self.addFile(FileNode(new_f, absPath, atribs))
+        for old in olds:
+            if os.path.isdir(self.path + "\\" + old):
+                self.directories.remove(self.searchDir(old))
+            else :
+                self.files.remove(self.searchFile(old))     
+
 
     @staticmethod
     def createFromPath(path : str):
         try:
-            neim = os.path.basename(path)
-            #   print(neim)
-            tree = FileTree(neim)
+            name = os.path.basename(path)
+            tree = FileTree(path, name)
             dirs, files = processPath(path)
             for direc in dirs:
                 tree.addDir(FileTree.createFromPath(path + "\\" + direc))

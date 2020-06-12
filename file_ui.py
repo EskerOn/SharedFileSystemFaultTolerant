@@ -15,6 +15,7 @@ from PIL import ImageTk
 import os
 from utils import *
 import math
+import _thread
 chatrooms = []
 users = []
 socketclient = None
@@ -268,8 +269,8 @@ class MainApp(Frame):
 
         self.buttons_panel = Frame(self.side_panel)
         Button(self.buttons_panel, text = "Regresar", command = self.backDirectory, width = 20).grid(row = 0, column = 0, pady = sep_y * 2, padx = separacion)
-        Button(self.buttons_panel, text = "Nuevo", command = self.newDirectory, width = 20).grid(row =  1, column = 0, pady = sep_y, padx = separacion)
-        Button(self.buttons_panel, text = "Transferir", command = self.noSeComoLlamarte, width = 20).grid(row =  2, column = 0, pady = sep_y, padx = separacion)
+        Button(self.buttons_panel, text = "Enviar", command = self.sendFileTo, width = 20).grid(row =  1, column = 0, pady = sep_y, padx = separacion)
+        Button(self.buttons_panel, text = "Transferir", command = self.requestFileFrom, width = 20).grid(row =  2, column = 0, pady = sep_y, padx = separacion)
         Button(self.buttons_panel, text = "Eliminar", command = self.deleteDirectory, width = 20).grid(row =  3, column = 0, pady = sep_y, padx = separacion)
         self.buttons_panel.pack()
 
@@ -313,8 +314,11 @@ class MainApp(Frame):
 
     def askmsg(self, titl, msg):
         return messagebox.askyesno(message=msg, title=titl)
+
+    def sendFileTo(self):
+        pass
     
-    def send_file(self):
+    def requestFileFrom(self):
         destino = self.current_tab.name
         file_c = tkinter.filedialog.askopenfilename(initialdir = os.path.expanduser("~/"),title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
         file_name = os.path.basename(file_c)
@@ -340,12 +344,6 @@ class MainApp(Frame):
             self.name_str.set(" ")
             self.file_size_str.set(" ")
             self.created_date_str.set(" ")
-
-    def newDirectory(self):
-        pass
-
-    def noSeComoLlamarte(self):
-        self.send_file()
 
     def deleteDirectory(self):
         pass
@@ -393,6 +391,22 @@ class FileExplorer(Frame):
         self.name = nombre
         self.explorerFrame()
         self.mainParent = mainParent
+        _thread.start_new_thread(self.checkForChanges, tuple())
+    
+    def checkForChanges(self):
+        print("iniciado")
+        path_to_watch = self.current_tree.path
+        before = dict([(f, None) for f in os.listdir(path_to_watch)])
+        while True:
+            time.sleep(5)
+            after = dict([(f, None) for f in os.listdir(path_to_watch)])
+            news = [f for f in after if not f in before]
+            deleted = [f for f in before if not f in after]
+            if len(before) != len(after):
+                self.current_tree.updateTree(news, deleted)
+                self.clearFrame()
+                self.explorerFrame()
+            before = after
 
     def clearFrame(self):
         for widget in self.myFrame.winfo_children():
