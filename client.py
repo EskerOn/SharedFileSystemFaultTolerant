@@ -35,6 +35,7 @@ class Client():
         self.online_clients = "None"
         self.file_udp = None
         self.backup=[]
+        self.clients=[]
         try:
             self.client.connect((self.HOST, self.PORT))
             print("[SERVER]: Conexion establecida")
@@ -48,16 +49,22 @@ class Client():
         self.reciver.start()
 
     def reciveMessage(self):
-        try:
-            while True :
+        while True :
+            try:
+                print("recibiendo mensajes")
                 message = self.client.recv(1024)
                 message = decodeJSON(message)
                 if message['type'] == messageType['login']:
                     Notitfication("Usuario conectado", "El usuario {} se ha conectado con el servidor".format(message['content']))   
                     self.online_clients = message['content']
+                    self.updateList(self.online_clients.split(" "))
+                    time.sleep(2)
                     self.window.actualizarContactos()
                 if message['type'] == messageType['info']:
                     self.online_clients = message['content']
+                    self.updateList(self.online_clients.split(" "))
+                    time.sleep(2)
+                    self.window.actualizarContactos()
                 if message['type'] == messageType['request']:
                     print("llego la petición")
                     if "OK" in message['content']:
@@ -82,8 +89,10 @@ class Client():
                     self.backup=message['content'].split()
                     time.sleep(0.5)
                     print("me llego el backup: {}".format(self.backup))
-        except socket.error:
-            self.repair()
+            except socket.error:
+                self.repair()
+            except ValueError:
+                pass
 
     def validUserName(self, user):
         self.user = user
@@ -159,37 +168,27 @@ class Client():
         receiver.close()
 
         Notitfication("Archivo guardado", "El archivo {} fue guardado en: {}".format(name, folder_path))
-    """
-    def listReciver(self, port):
-        receiver = socket.socket()
-        # bind the socket to our local address
-        receiver.bind(("0.0.0.0", port))
-        receiver.listen(1)
-        sender_socket, address = receiver.accept()
-        received = sender_socket.recv(BUFFER_SIZE)
-        self.backup = pickle.loads(received)
-        sender_socket.close()
-        # close the server socket
-        receiver.close()
-        print(self.backup)
-    """
+
     def setWindow(self, win):
         print("ventana añadida")
         self.window = win
-        #self.window.updateList()
+    def updateList(self, received):
+        for element in received:
+            if element in self.clients:
+                pass
+            else:
+                self.clients.append(element)
 
     def sendRequestFile(self, title, destin):
         try:
             self.file_udp = title
             self.client.send(encodeJSON(messageType['request'], os.path.basename(title), destin))
+            print("Envío solicitud")
         except socket.error:
             self.repair()
 
     def updateclients(self):
-        if self.online_clients == "None":
-            return None
-        else:
-            return self.online_clients.split(" ")
+        return self.clients
 
     def disconect(self):
         try:
@@ -199,7 +198,6 @@ class Client():
             self.repair()
     
     def repair(self):
-        global connected
         connected = False          
         self.client = socket.socket()          
         print( "connection lost... reconnecting" )
@@ -211,7 +209,8 @@ class Client():
             try:                                   
                 self.client.connect((ip,backport))  
                 connected = True
-                print( "re-connection successful" )              
+                print("re-connection successful")
+                self.validUserName(self.user)            
             except socket.error:
                 backport+=1                  
                 time.sleep( 2 )

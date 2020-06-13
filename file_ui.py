@@ -293,12 +293,15 @@ class MainApp(Frame):
         connectUsers = []
         if onlineClients!=None:
             for user in onlineClients :
-                if user != " " and user != username and user!="":
-                    newpc=Computer(user, None)
-                    self.computers.append(newpc)  #### se agregan los arboles de los clientes 
-                    connectUsers.append(user)
-                    self.addClient(user)
-                    self.addTabs(newpc, self)
+                if user in users:
+                    pass
+                else:
+                    if user != " " and user != username and user!="":
+                        newpc=Computer(user, None)
+                        self.computers.append(newpc)  #### se agregan los arboles de los clientes 
+                        connectUsers.append(user)
+                        self.addClient(user)
+                        self.addTabs(newpc, self)
         print("Contactos actualizados: ")
         for pc in self.computers:
             print(pc.name)
@@ -334,6 +337,7 @@ class MainApp(Frame):
     def addClient(self, clientname):
         global chatsLog
         if clientname not in users:
+            users.append(clientname)
             chatsLog[clientname] = ""
         else:
             pass
@@ -395,18 +399,22 @@ class FileExplorer(Frame):
     
     def checkForChanges(self):
         print("iniciado")
-        path_to_watch = self.current_tree.path
-        before = dict([(f, None) for f in os.listdir(path_to_watch)])
-        while True:
+        if self.current_tree==None:
             time.sleep(5)
-            after = dict([(f, None) for f in os.listdir(path_to_watch)])
-            news = [f for f in after if not f in before]
-            deleted = [f for f in before if not f in after]
-            if len(before) != len(after):
-                self.current_tree.updateTree(news, deleted)
-                self.clearFrame()
-                self.explorerFrame()
-            before = after
+        else:
+            path_to_watch = self.current_tree.path
+            before = dict([(f, None) for f in os.listdir(path_to_watch)])
+            while True:
+                time.sleep(5)
+                after = dict([(f, None) for f in os.listdir(path_to_watch)])
+                news = [f for f in after if not f in before]
+                deleted = [f for f in before if not f in after]
+                if len(before) != len(after):
+                    self.current_tree.updateTree(news, deleted)
+                    self.clearFrame()
+                    self.explorerFrame()
+                before = after
+        
 
     def clearFrame(self):
         for widget in self.myFrame.winfo_children():
