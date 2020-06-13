@@ -185,7 +185,7 @@ class Login(Frame):
             self.popupmsg("Error!", "El usuario no puede contener espacios, intente nuevamente")
             anyError = True
         if not anyError and not socketcreated:
-            socketclient = client.Client("127.0.0.1", 1908) ####################################################
+            socketclient = client.Client(self.ip_str.get(), 1908) ####################################################
             socketcreated = True
         if not socketclient.validUserName(self.user_str.get()):
             username = self.user_str.get()

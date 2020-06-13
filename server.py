@@ -169,7 +169,6 @@ class Server():
             self.removeUser(client)
     
     def backup(self, message):
-        print("entrando en backup")
         disconectedClienst = []
         for client in self.clients :
             try:

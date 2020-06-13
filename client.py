@@ -203,14 +203,22 @@ class Client():
         print( "connection lost... reconnecting" )
         backport=2000          
         while not connected:
-            if backport>=2004 or backport==2000:
-                ip=self.backup.pop()
-                print(ip)              
-            try:                                   
+            if (backport>=2004 or backport==2000) and len(self.backup)>0:
+                ip=self.backup.pop(0)
+                print(ip)
+            if len(self.backup)==0:
+                break                  
+            try:
+                print("intentando conectar con: {}".format(ip))                                   
                 self.client.connect((ip,backport))  
                 connected = True
-                print("re-connection successful")
-                self.validUserName(self.user)            
+                print("Coneccion exitosa")
+                if connected==True:
+                    try:
+                        self.validUserName(self.user)
+                    except ValueError:
+                        time.sleep(1)
+                        self.validUserName(self.user)            
             except socket.error:
                 backport+=1                  
                 time.sleep( 2 )
