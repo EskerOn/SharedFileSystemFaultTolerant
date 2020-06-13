@@ -8,11 +8,9 @@ import pickle
 import argparse
 logging.StreamHandler(sys.stdout)
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt=' %I:%M:%S %p')
-backup=[]
 ## getting the hostname by socket.gethostname() method
 hostname = socket.gethostname()
 ## getting the IP address using socket.gethostbyname() method
-ip_address = "192.168.8.2"
 port= 1908
 def parseArgs():
     global ip_address, port
@@ -31,12 +29,13 @@ def parseArgs():
 
 class Server():
 
-    def __init__(self,ip, port):
+    def __init__(self, port):
 
-        self.HOST = ip
+        self.HOST = "192.168.8.2"
         self.PORT = port
         self.MAX_CONNECTIONS = 4
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.backupserv=[]
         try:
             self.server.bind(("", self.PORT))
         except OSError:
@@ -44,8 +43,12 @@ class Server():
                 self.PORT+=1
                 self.server.bind(("", self.PORT))
             except OSError:
-                self.PORT+=1
-                self.server.bind(("", self.PORT))
+                try:
+                    self.PORT+=1
+                    self.server.bind(("", self.PORT))
+                except OSError:
+                    self.server.bind(("", self.PORT))
+                
         self.server.listen(self.MAX_CONNECTIONS)
         print("Server en la IP : {} PORT : {} para {} conexiones".format(self.HOST, self.PORT, self.MAX_CONNECTIONS))
         
@@ -58,10 +61,10 @@ class Server():
                 connection, addr = self.server.accept()
                 self.clientsSem.acquire()
                 self.clients[connection] = ""
-                backup.append(addr)
                 print(addr)
                 self.clientsSem.release()
-                print("{} conectado con puerto {}".format(*addr))
+                print("{} conectado con puerto {}".format(addr[0], addr[1]))
+                self.backupserv.append(addr[0])
                 self.myThread = threading.Thread(target= self.clientThread, args=(connection, addr))
                 self.myThread.setDaemon = True
                 self.myThread.start()
@@ -89,13 +92,13 @@ class Server():
                     else :
                         connection.send(encodeJSON(messageType['username'], "OK"))
                         print("Solicitud para el usuario <{}> aprobada".format(username))
-                        #self.backup(encodeJSON(messageType['back'], self.getbackup()))
                         self.clients[connection] = username
                         self.broadcast(encodeJSON(messageType['login'], "{}".format(username)), connection)
                         time.sleep(1.0)
-                        #self.broadcast(encodeJSON(messageType['private'], ">[{}] is online!".format(username)), connection)
                         connection.send(encodeJSON(messageType['info'], self.getAllUsers()))
                         self.broadcast(encodeJSON(messageType['info'], self.getAllUsers()), connection)
+                        connection.send(encodeJSON(messageType['back'], self.getbackup()))
+                        self.broadcast(encodeJSON(messageType['back'], self.getbackup()), connection)
                         print("Usuario {} registrado".format(username))
                     self.clientsSem.release()
                 #chatroom
@@ -179,21 +182,12 @@ class Server():
 
     def getbackup(self):
         usern = ""
-        if len(backup) > 0:
-            for user in backup:
-                usern += "{} ".format(user[0])
+        if len(self.backupserv) > 0:
+            for user in self.backupserv:
+                usern += "{} ".format(user)
             return usern
         else :
             return "None"
-
-    def listSender(self):
-        for client in backup:
-            sender = socket.socket()
-            print(client)
-            sender.connect((client[0], int(client[1])))
-            data_string = pickle.dumps(backup)
-            sender.send(data_string)
-            sender.close()
 
     def removeUser(self, connection):
         if connection in self.clients :
@@ -210,6 +204,6 @@ class Server():
             return "ws"
 if __name__ == "__main__":           
     parseArgs()
-    server = Server(ip_address,int(port))
+    server = Server(int(port))
                         
 

@@ -8,13 +8,16 @@ from notifications import Notitfication
 import os
 import random
 import tqdm
-import subprocess
+import _thread
+from server import Server
 SEPARATOR = "<SEPARATOR>"
+connected = True
 BUFFER_SIZE = 1024 * 4 #4KB
 ## getting the hostname by socket.gethostname() method
 hostname = socket.gethostname()
 ## getting the IP address using socket.gethostbyname() method
 ip_address = socket.gethostbyname(hostname)
+
 class Client():
 
     def __init__(self, host, port):
@@ -32,12 +35,12 @@ class Client():
         self.online_clients = "None"
         self.file_udp = None
         self.backup=[]
-
         try:
             self.client.connect((self.HOST, self.PORT))
             print("[SERVER]: Conexion establecida")
-        except ConnectionError:
+        except socket.error:
             print("constructor error")
+        _thread.start_new_thread(Server, (2000, ))
 
     def startListenServer(self):
         self.reciver = threading.Thread(target=self.reciveMessage)
@@ -78,9 +81,9 @@ class Client():
                 if message['type'] == messageType['back']:
                     self.backup=message['content'].split()
                     time.sleep(0.5)
-                    print(self.backup)
-        except ConnectionError:
-            pass
+                    print("me llego el backup: {}".format(self.backup))
+        except socket.error:
+            self.repair()
 
     def validUserName(self, user):
         self.user = user
@@ -156,7 +159,7 @@ class Client():
         receiver.close()
 
         Notitfication("Archivo guardado", "El archivo {} fue guardado en: {}".format(name, folder_path))
-
+    """
     def listReciver(self, port):
         receiver = socket.socket()
         # bind the socket to our local address
@@ -169,7 +172,7 @@ class Client():
         # close the server socket
         receiver.close()
         print(self.backup)
-
+    """
     def setWindow(self, win):
         print("ventana añadida")
         self.window = win
@@ -179,7 +182,7 @@ class Client():
         try:
             self.file_udp = title
             self.client.send(encodeJSON(messageType['request'], os.path.basename(title), destin))
-        except ConnectionError:
+        except socket.error:
             self.repair()
 
     def updateclients(self):
@@ -189,11 +192,29 @@ class Client():
             return self.online_clients.split(" ")
 
     def disconect(self):
-        self.client.send(encodeJSON(messageType['logout']))
-        Notitfication("Desconeccion de usuario", "El usuario {} se ha desconectado del servidor".format(self.user))
+        try:
+            self.client.send(encodeJSON(messageType['logout']))
+            Notitfication("Desconeccion de usuario", "El usuario {} se ha desconectado del servidor".format(self.user))
+        except socket.error:
+            self.repair()
     
     def repair(self):
-        pass
+        global connected
+        connected = False          
+        self.client = socket.socket()          
+        print( "connection lost... reconnecting" )
+        backport=2000          
+        while not connected:
+            if backport>=2004 or backport==2000:
+                ip=self.backup.pop()
+                print(ip)              
+            try:                                   
+                self.client.connect((ip,backport))  
+                connected = True
+                print( "re-connection successful" )              
+            except socket.error:
+                backport+=1                  
+                time.sleep( 2 )
         
     
     def setUserName(self, username):
