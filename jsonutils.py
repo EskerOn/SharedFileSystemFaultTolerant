@@ -5,13 +5,10 @@ messageType = {
     'login' : 1,  
     'logout' : 2,
     'username' : 3,
-    'private' : 4,
-    'public' : 5,
-    'chatroom' : 6,
-    'info' : 7,
-    'request' : 8,
-    'error' : 9,
-    'back' : 10
+    'info' : 4,
+    'request' : 5,
+    'error' : 6,
+    'back' : 7
 }
 
 def decodeJSON(message):
