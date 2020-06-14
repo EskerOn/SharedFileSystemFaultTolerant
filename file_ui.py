@@ -201,6 +201,7 @@ class Login(Frame):
 
 
     def onClosing(self, frame):
+        socketclient.disconect()
         frame.destroy()
 
     def closeApp(self):
