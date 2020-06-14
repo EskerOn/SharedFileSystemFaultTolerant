@@ -34,8 +34,6 @@ class FileTree():
         return t
 
     def toJSON(self):
-        print("Holas")
-        #dirs = [dire.toJSON() for dire in self.directories]
         return {"path" :self.path, "name" : self.name, "directories" : [dire.toJSON() for dire in self.directories], "files" : [file.toJSON() for file in self.files]}
 
     def addFile(self, file : FileNode):

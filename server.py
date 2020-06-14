@@ -79,7 +79,7 @@ class Server():
     def clientThread(self, connection, addr):
         while True:
             try:
-                message = connection.recv(1024)
+                message = connection.recv(8192)
                 message = decodeJSON(message)
                 messagetype = message['type']
                 #Chose or chage username
@@ -149,6 +149,10 @@ class Server():
                     self.broadcast(encodeJSON(messageType['logout'], "{}".format(username)), connection)
                     self.clientsSem.release()
                     break
+
+                elif messagetype == messageType['update']:
+                    print("Tratando de enviar la actualizacion")
+                    self.broadcast(encodeJSON(message['type'], message['content'], message['target']), connection);
             except:
                 pass
 

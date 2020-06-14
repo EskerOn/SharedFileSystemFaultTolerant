@@ -368,15 +368,29 @@ class MainApp(Frame):
             self.current_file = None
 
     def deleteDirectory(self):
+        '''
         if self.current_file != None:
             os.remove(self.current_file.path)
+        '''
+        print("enviando la info jajaj")
+        socketclient.sendFileTree(FileTree.createFromPath(self.rootPath).toJSON())
+
+
+    def updateDir(self, name, tree):
+        print("entro a actualizar dirs")
+        for tab in self.tabs:
+            if tab.name == name:
+                print("Encuentro un dir?")
+                tab.setTree(FileTree.fromJSON(tree))
+        
+
 
     def changeTab(self, event):
         global tabIndex
         tabIndex = event.widget.index("current")
         print("toy en la tab", tabIndex)
         self.current_tab = self.tabs[tabIndex]
-        print(self.tabs[0])
+        print(self.tabs[0].name)
     
     def popupmsg(self, error, msg):
         LARGE_FONT= ("Verdana", 12)
@@ -416,6 +430,12 @@ class FileExplorer(Frame):
         self.explorerFrame()
         self.mainParent = mainParent
         _thread.start_new_thread(self.checkForChanges, tuple())
+
+    def setTree(self, tree):
+        self.mainTree = tree
+        self.current_tree = tree
+        self.clearFrame()
+        self.explorerFrame()
     
     def checkForChanges(self):
         print("iniciado")

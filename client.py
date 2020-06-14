@@ -9,6 +9,7 @@ import os
 import random
 import tqdm
 import _thread
+import json
 from server import Server
 SEPARATOR = "<SEPARATOR>"
 connected = True
@@ -36,6 +37,7 @@ class Client():
         self.file_udp = None
         self.backup=[]
         self.clients=[]
+        self.clients_comps = []
         try:
             self.client.connect((self.HOST, self.PORT))
             print("[SERVER]: Conexion establecida")
@@ -52,7 +54,7 @@ class Client():
         while True :
             try:
                 print("recibiendo mensajes")
-                message = self.client.recv(1024)
+                message = self.client.recv(8192)
                 message = decodeJSON(message)
                 if message['type'] == messageType['login']:
                     Notitfication("Usuario conectado", "El usuario {} se ha conectado con el servidor".format(message['content']))   
@@ -89,6 +91,8 @@ class Client():
                     self.backup=message['content'].split()
                     time.sleep(0.5)
                     print("me llego el backup: {}".format(self.backup))
+                if message['type'] == messageType['update']:
+                    self.updateDir(message['target'], message['content'])
             except socket.error:
                 self.repair()
             except ValueError:
@@ -172,6 +176,10 @@ class Client():
     def setWindow(self, win):
         print("ventana añadida")
         self.window = win
+
+    def updateDir(self, user, tree):
+        self.window.updateDir(user, json.loads(tree))
+
     def updateList(self, received):
         for element in received:
             if element in self.clients:
@@ -222,7 +230,11 @@ class Client():
                 time.sleep( 2 )
 
     def sendFileTree(self, tree):
-        pass
+        print("Enviando")
+        test = encodeJSON(messageType['update'], json.dumps(tree), self.user)
+        print(sys.getsizeof(test))
+        self.client.send(test)
+        print("Enviado")
         
     
     def setUserName(self, username):
