@@ -230,13 +230,16 @@ class MainApp(Frame):
         #self.computer2 = Computer("Alejandro", "C:\\Users\\52951\\Downloads")
         self.computers = list()
         self.computers.append(self.computer)
+        self.comp_names = []
         #self.computers.append(self.computer2)
         self.tabs = list()
         self.current_tab = None
+        self.current_file = None
         socketclient.setWindow(self)
         self.initComponents()
 
     def initComponents(self):
+        self.combo_names = None
         self.tabsFrame = ttk.Notebook(self.parent, height = self.y, width = int(self.y * 1.45)) 
         #self.tabsFrame = ttk.Notebook(self.parent)
         #self.tabsFrame.pack(fill = 'both', side = LEFT)
@@ -269,13 +272,22 @@ class MainApp(Frame):
 
         self.buttons_panel = Frame(self.side_panel)
         Button(self.buttons_panel, text = "Regresar", command = self.backDirectory, width = 20).grid(row = 0, column = 0, pady = sep_y * 2, padx = separacion)
-        Button(self.buttons_panel, text = "Enviar", command = self.sendFileTo, width = 20).grid(row =  1, column = 0, pady = sep_y, padx = separacion)
-        Button(self.buttons_panel, text = "Transferir", command = self.requestFileFrom, width = 20).grid(row =  2, column = 0, pady = sep_y, padx = separacion)
-        Button(self.buttons_panel, text = "Eliminar", command = self.deleteDirectory, width = 20).grid(row =  3, column = 0, pady = sep_y, padx = separacion)
+        self.combocontacts_str = StringVar()
+        self.combo_names = ttk.Combobox(self.buttons_panel, values = self.comp_names, textvariable = self.combocontacts_str)
+        if len(self.comp_names) > 0:
+            self.combo_names.current(0)
+        self.combo_names.grid(row = 1, column = 0, pady = sep_y, padx = separacion)
+        self.combo_names.bind("<<ComboboxSelected>>", self.selection_changed)
+        Button(self.buttons_panel, text = "Enviar", command = self.sendFileTo, width = 20).grid(row =  2, column = 0, pady = sep_y, padx = separacion)
+        Button(self.buttons_panel, text = "Transferir", command = self.requestFileFrom, width = 20).grid(row =  3, column = 0, pady = sep_y, padx = separacion)
+        Button(self.buttons_panel, text = "Eliminar", command = self.deleteDirectory, width = 20).grid(row =  4, column = 0, pady = sep_y, padx = separacion)
         self.buttons_panel.pack()
 
         self.side_panel.grid(row = 0, column = 3)
         #self.side_panel.pack(fill = 'both', side = RIGHT)
+
+    def selection_changed(self, event):
+        print("Se selecciono: ", self.combo_names.get())
 
     def addTabs(self, pc, parent):
         print("añadiendo tabs")
@@ -297,6 +309,9 @@ class MainApp(Frame):
                     pass
                 else:
                     if user != " " and user != username and user!="":
+                        self.comp_names.append(user)
+                        if self.combo_names != None:
+                            self.combo_names.config(values = self.comp_names)
                         newpc=Computer(user, None)
                         self.computers.append(newpc)  #### se agregan los arboles de los clientes 
                         connectUsers.append(user)
@@ -319,7 +334,8 @@ class MainApp(Frame):
         return messagebox.askyesno(message=msg, title=titl)
 
     def sendFileTo(self):
-        pass
+        if self.current_file != None:
+            print("Se enviara el archivo {} al destino {}".format(self.current_file.name, self.combo_names.get()))
     
     def requestFileFrom(self):
         destino = self.current_tab.name
@@ -348,9 +364,11 @@ class MainApp(Frame):
             self.name_str.set(" ")
             self.file_size_str.set(" ")
             self.created_date_str.set(" ")
+            self.current_file = None
 
     def deleteDirectory(self):
-        pass
+        if self.current_file != None:
+            os.remove(self.current_file.path)
 
     def changeTab(self, event):
         global tabIndex
@@ -380,6 +398,7 @@ class MainApp(Frame):
             self.name_str.set(" ")
             self.file_size_str.set(" ")
             self.created_date_str.set(" ")
+    
 
 
 class FileExplorer(Frame):
@@ -400,7 +419,7 @@ class FileExplorer(Frame):
     def checkForChanges(self):
         print("iniciado")
         if self.current_tree==None:
-            time.sleep(5)
+            time.sleep(3)
         else:
             path_to_watch = self.current_tree.path
             before = dict([(f, None) for f in os.listdir(path_to_watch)])
@@ -483,6 +502,7 @@ class FileExplorer(Frame):
             file = self.current_tree.searchFile(name)
             if file != None:
                 self.mainParent.modificateAttribs(file)
+                self.mainParent.current_file = file
         #print("Current tree: ", self.current_tree.name)
     
 

@@ -12,6 +12,7 @@ logging.basicConfig(format='%(asctime)s %(message)s', datefmt=' %I:%M:%S %p')
 hostname = socket.gethostname()
 ## getting the IP address using socket.gethostbyname() method
 port= 1908
+ip_address = None
 def parseArgs():
     global ip_address, port
 

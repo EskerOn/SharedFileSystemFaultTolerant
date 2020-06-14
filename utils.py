@@ -36,6 +36,7 @@ class FileTree():
         return None
 
     def updateTree(self, news, olds):
+        print(olds)
         for new_f in news:
             if os.path.isdir(self.path + "\\" + new_f):
                 self.addDir(FileTree.createFromPath(self.path + "\\" + new_f))
@@ -43,11 +44,11 @@ class FileTree():
                 absPath = self.path + "\\" + new_f
                 atribs = getFileAttribs(absPath)
                 self.addFile(FileNode(new_f, absPath, atribs))
-        for old in olds:
-            if os.path.isdir(self.path + "\\" + old):
-                self.directories.remove(self.searchDir(old))
+        for old_f in olds:
+            if os.path.isdir(self.path + "\\" + old_f):
+                self.directories.remove(self.searchDir(old_f))
             else :
-                self.files.remove(self.searchFile(old))     
+                self.files.remove(self.searchFile(old_f))     
 
 
     @staticmethod
