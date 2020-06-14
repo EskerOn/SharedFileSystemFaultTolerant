@@ -8,7 +8,8 @@ messageType = {
     'info' : 4,
     'request' : 5,
     'error' : 6,
-    'back' : 7
+    'back' : 7,
+    'update' : 8
 }
 
 def decodeJSON(message):

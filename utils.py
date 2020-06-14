@@ -7,6 +7,13 @@ class FileNode():
         self.name = name
         self.path = path
         self.attribs = attribs
+
+    def toJSON(self):
+        return {"name": self.name, "path": self.path, "attribs" : self.attribs}
+
+    @staticmethod
+    def fromJSON(jsonObj):
+        return FileNode(jsonObj['name'], jsonObj['path'], jsonObj['attribs'])
         
 
 class FileTree():
@@ -15,6 +22,21 @@ class FileTree():
         self.name = name
         self.directories = []
         self.files = []
+
+    @staticmethod
+    def fromJSON(jsonObj):
+        t = FileTree(jsonObj['path'], jsonObj['name'])
+        print(t.name)
+        for d in list(jsonObj['directories']):
+            t.addDir(FileTree.fromJSON(d))
+        for f in jsonObj['files']:
+            t.addFile(FileNode.fromJSON(f))
+        return t
+
+    def toJSON(self):
+        print("Holas")
+        #dirs = [dire.toJSON() for dire in self.directories]
+        return {"path" :self.path, "name" : self.name, "directories" : [dire.toJSON() for dire in self.directories], "files" : [file.toJSON() for file in self.files]}
 
     def addFile(self, file : FileNode):
         self.files.append(file)

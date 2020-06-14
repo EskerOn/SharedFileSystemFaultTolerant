@@ -222,6 +222,9 @@ class Client():
             except socket.error:
                 backport+=1                  
                 time.sleep( 2 )
+
+    def sendFileTree(self, tree):
+        pass
         
     
     def setUserName(self, username):
