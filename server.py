@@ -93,22 +93,33 @@ class Server():
                 if messagetype == messageType['username']:
                     username = message['content']
                     print("Solicitud de asignacion de usuario <{}>".format(username))
-                    self.clientsSem.acquire()
-                    if self.getUserFromName(username):
+                    if self.validName(username):
+                        self.clientsSem.acquire()
+                        if self.getUserFromName(username):
+                            connection.send(encodeJSON(messageType['username'], "NOT OK"))
+                            print("Solicitud para el usuario <{}> denegada, usuario ya registrado".format(username))
+                        else :
+                            connection.send(encodeJSON(messageType['username'], "OK"))
+                            print("Solicitud para el usuario <{}> aprobada".format(username))
+                            self.clients[connection] = username
+                            self.broadcast(encodeJSON(messageType['login'], "{}".format(username)), connection)
+                            time.sleep(1.0)
+                            connection.send(encodeJSON(messageType['info'], self.getAllUsers()))
+                            self.broadcast(encodeJSON(messageType['info'], self.getAllUsers()), connection)
+                            connection.send(encodeJSON(messageType['back'], self.getbackup()))
+                            self.broadcast(encodeJSON(messageType['back'], self.getbackup()), connection)
+                            print("Usuario {} registrado".format(username))
+                            self.activeNodes[username] = True
+                            print(self.activeNodes)
+                            if self.pro_mode:
+                                print("KKKKK")
+                                self.myThread = threading.Thread(target = self.restoreFromFall, args=(connection, ))
+                                self.myThread.setDaemon = True
+                                self.myThread.start()
+                        self.clientsSem.release()
+                    else:
                         connection.send(encodeJSON(messageType['username'], "NOT OK"))
                         print("Solicitud para el usuario <{}> denegada, usuario ya registrado".format(username))
-                    else :
-                        connection.send(encodeJSON(messageType['username'], "OK"))
-                        print("Solicitud para el usuario <{}> aprobada".format(username))
-                        self.clients[connection] = username
-                        self.broadcast(encodeJSON(messageType['login'], "{}".format(username)), connection)
-                        time.sleep(1.0)
-                        connection.send(encodeJSON(messageType['info'], self.getAllUsers()))
-                        self.broadcast(encodeJSON(messageType['info'], self.getAllUsers()), connection)
-                        connection.send(encodeJSON(messageType['back'], self.getbackup()))
-                        self.broadcast(encodeJSON(messageType['back'], self.getbackup()), connection)
-                        print("Usuario {} registrado".format(username))
-                    self.clientsSem.release()
                 #chatroom
                 elif messagetype == messageType['request']:
                     #self.backup(encodeJSON(messageType['back'], self.getbackup()))
@@ -264,6 +275,11 @@ class Server():
         self.activeNodes[username] = False
         print(self.activeNodes)
 
+    def validName(self, username):
+        for user in self.validUsers:
+            if user == username:
+                return True
+        return False
     def allOnline(self):
         return (self.activeNodes["A"] and self.activeNodes["B"] and self.activeNodes["C"] and self.activeNodes["D"])
 
