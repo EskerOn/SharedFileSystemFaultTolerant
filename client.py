@@ -178,7 +178,7 @@ class Client():
         sender.close()
         print("Se envio por completo")
 
-    def atenderSolicitudFinal():
+    def atenderSolicitudFinal(self):
         time.sleep(5.0)
         print("Solicitud procesada exitosamente")
 
