@@ -19,10 +19,11 @@ messageType = {
 def decodeJSON(message):
     return json.loads(message.decode('utf-8'))
         
-def encodeJSON(type, message = None, target = None):
+def encodeJSON(type, message = None, target = None, action = None):
     msg = {
         'type' : type,
         'content' : message,
-        'target' : target, 
+        'target' : target,
+        'action' : action, 
     }
     return bytes(json.dumps(msg), 'utf-8')

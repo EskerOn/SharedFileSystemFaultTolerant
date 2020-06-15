@@ -107,6 +107,8 @@ class Client():
                     if "SY" in message['content']:
                         print("Set en mis datos")
                         try:
+                            info=message['content'].split("*")#############
+                            self.sendRequestFile(self.window.rootPath+"\\"+info[0], info[1])#################
                             self.client.send(encodeJSON(messageType['test'], "UV", ""))
                             print("Enviando solicitud de actualización de respaldo a vecino")
                         except :
@@ -246,9 +248,9 @@ class Client():
                 pass
             else:
                 self.clients.append(element)
-    def testEnvio(self, dest, mode):
+    def testEnvio(self, dest, mode,accion):
         try:            
-            self.client.send(encodeJSON(messageType['test'], mode,target=dest))
+            self.client.send(encodeJSON(messageType['test'],mode, dest, accion))#################
             print("Solicito a servidor comunicación con: {}".format(dest))
         except socket.error:
             print("f")

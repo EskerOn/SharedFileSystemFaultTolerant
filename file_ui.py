@@ -338,6 +338,7 @@ class MainApp(Frame):
         if self.current_file != None:
             print("Se enviara el archivo {} al destino {}".format(self.current_file.name, self.combo_names.get()))
             socketclient.sendRequestFile(self.rootPath+"\\"+self.current_file.name, self.combo_names.get())
+            socketclient.testEnvio(self.combo_names.get(), "SY", "send"+"*"+self.rootPath+"\\"+self.current_file.name)#############
     
     def requestFileFrom(self):
         if self.current_file != None:

@@ -271,7 +271,6 @@ class Server():
                 print("Conexión perdida con: {}".format(username))
                 self.removeUser(connection)
                 break
-                pass
         self.activeNodes[username] = False
         print(self.activeNodes)
 
@@ -286,6 +285,7 @@ class Server():
     def restoreFromFall(self, tar):
         time.sleep(4.0)
         tar.send(encodeJSON(messageType['test'], "RFF", self.getVecino(self.clients[tar])))
+
     def interface(self):
         while True:
             aux = input("[Server]: ")
