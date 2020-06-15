@@ -37,6 +37,7 @@ class Client():
         self.file_TCP = None
         self.backup=[]
         self.clients=[]
+        self.cola=[]
         self.clients_comps = []
         try:
             self.client.connect((self.HOST, self.PORT))
@@ -102,6 +103,43 @@ class Client():
                     print("voy a eliminar"+message['content'])
                     os.remove(message['content'])
                     self.window.sendTree()
+                if message['type'] == messageType['test']:
+                    if "SY" in message['content']:
+                        print("Set en mis datos")
+                        try:
+                            self.client.send(encodeJSON(messageType['test'], "UV", ""))
+                            print("Enviando solicitud de actualización de respaldo a vecino")
+                        except :
+                            print("Falla crítica")
+                    elif "SV" in message['content']:
+                        print("Set en los datos del vecino, añadida accion a la cola")
+                        self.cola.append(message)
+                        print(self.cola)
+                    elif "UY" in message['content']:
+                        print("Actualizando datos con los datos del respaldo de vecino")  
+                        self.myThread = threading.Thread(target = self.atenderSolicitudFinal)
+                        self.myThread.setDaemon = True
+                        self.myThread.start()
+                    elif "UV" in message['content']:
+                        print("Actualizando datos de respaldo del vecino")
+                    elif "CA" in message['content']:
+                        print("Mandando datos a vecino: {}".format(message['target']))
+                    elif "LP" in message['content']:
+                        print("Accediendo a lista de pendientes de: {}".format(message['target']))
+                        if len(self.cola) > 0:
+                            self.myThread = threading.Thread(target = self.enviarLista, args=(message['target'], ))
+                            self.myThread.setDaemon = True
+                            self.myThread.start()
+                    elif "RFF" in message['content']:
+                        print("Restaurando de caída: {}".format(message['target']))                        
+                        try:
+                            self.client.send(encodeJSON(messageType['test'], "LP", ""))
+                            print("Enviando solicitud de acceso a respaldo a vecino")
+                        except :
+                            print("Falla crítica")
+                    else:
+                        print("simón, ya escuché")
+                    time.sleep(0.5)
             except socket.error:
                 self.repair()
             except ValueError:
@@ -121,6 +159,15 @@ class Client():
         else :
             return False
 
+    def enviarLista(self, tar):
+        time.sleep(1.5)
+        while(len(self.cola) > 0):
+            instruction = self.cola.pop()
+            try:
+                self.client.send(encodeJSON(messageType['test'], "UY", tar))
+                print("Enviando instruccion")
+            except :
+                print("Falla crítica")
     def createTCPSender(self, ip, port):
         sender = socket.socket()
         sender.connect((ip, int(port)))
@@ -143,6 +190,10 @@ class Client():
         # close the socket
         sender.close()
         print("Se envio por completo")
+
+    def atenderSolicitudFinal(self):
+        time.sleep(5.0)
+        print("Solicitud procesada exitosamente")
 
     def createTCPReciver(self, port):
         receiver = socket.socket()
@@ -195,7 +246,13 @@ class Client():
                 pass
             else:
                 self.clients.append(element)
-
+    def testEnvio(self, dest, mode):
+        try:            
+            self.client.send(encodeJSON(messageType['test'], mode,target=dest))
+            print("Solicito a servidor comunicación con: {}".format(dest))
+        except socket.error:
+            print("f")
+            self.repair()
     def sendRequestFile(self, title, destin):
         try:
             self.file_TCP = title
