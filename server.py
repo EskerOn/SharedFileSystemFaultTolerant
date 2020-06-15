@@ -16,7 +16,7 @@ ip_address = None
 def parseArgs():
     global ip_address, port
 
-    desc = "servidor"
+    desc = "servidor de chat"
     parser = argparse.ArgumentParser(description=desc)
 
     parser.add_argument("--ip", "-i", help="Ip adress")
@@ -34,10 +34,6 @@ class Server():
 
         self.HOST = "192.168.8.2"
         self.PORT = port
-<<<<<<< HEAD
-        self.pro_mode = False
-=======
->>>>>>> parent of 22fe882... new changes
         self.MAX_CONNECTIONS = 4
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.backupserv=[]

@@ -144,15 +144,7 @@ class Client():
         sender.close()
         print("Se envio por completo")
 
-<<<<<<< HEAD
-    def atenderSolicitudFinal(self):
-        time.sleep(5.0)
-        print("Solicitud procesada exitosamente")
-
-    def createUDPReciver(self, port):
-=======
     def createTCPReciver(self, port):
->>>>>>> parent of 22fe882... new changes
         receiver = socket.socket()
         # bind the socket to our local address
         receiver.bind(("0.0.0.0", port))

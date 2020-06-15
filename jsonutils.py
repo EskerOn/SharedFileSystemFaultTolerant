@@ -12,12 +12,7 @@ messageType = {
     'update' : 8,
     'upsignal' : 9,
     'filesend' : 10,
-<<<<<<< HEAD
-    'remotedel' :11,
-    'test' : 12
-=======
     'remotedel' :11
->>>>>>> parent of 22fe882... new changes
 }
 
 def decodeJSON(message):
