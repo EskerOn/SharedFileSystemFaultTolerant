@@ -9,7 +9,9 @@ messageType = {
     'request' : 5,
     'error' : 6,
     'back' : 7,
-    'update' : 8
+    'update' : 8,
+    'upsignal' : 9,
+    'filesend' : 10
 }
 
 def decodeJSON(message):

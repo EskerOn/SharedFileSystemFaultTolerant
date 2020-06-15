@@ -152,7 +152,19 @@ class Server():
 
                 elif messagetype == messageType['update']:
                     print("Tratando de enviar la actualizacion")
-                    self.broadcast(encodeJSON(message['type'], message['content'], message['target']), connection);
+                    self.broadcast(encodeJSON(message['type'], message['content'], message['target']), connection)
+                elif messagetype == messageType['upsignal']:
+                        reciver=message['content']
+                        self.clientsSem.acquire()
+                        reciver = self.getUserFromName(reciver)
+                        self.clientsSem.release()
+                        reciver.send(encodeJSON(messageType['upsignal']))
+                elif messagetype == messageType['filesend']:
+                        reciver=message['target']
+                        self.clientsSem.acquire()
+                        reciver = self.getUserFromName(reciver)
+                        self.clientsSem.release()
+                        reciver.send(encodeJSON(messageType['filesend'], message['content']))
             except:
                 pass
 

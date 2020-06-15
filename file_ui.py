@@ -337,13 +337,12 @@ class MainApp(Frame):
     def sendFileTo(self):
         if self.current_file != None:
             print("Se enviara el archivo {} al destino {}".format(self.current_file.name, self.combo_names.get()))
+            socketclient.sendRequestFile(self.rootPath+"\\"+self.current_file.name, self.combo_names.get())
     
     def requestFileFrom(self):
-        destino = self.current_tab.name
-        file_c = tkinter.filedialog.askopenfilename(initialdir = os.path.expanduser("~/"),title = "Select file",filetypes = (("jpeg files","*.jpg"),("all files","*.*")))
-        file_name = os.path.basename(file_c)
-        socketclient.sendRequestFile(file_c, destino)
-    
+        if self.current_file != None:
+            print("Se enviara el archivo {} al destino {}".format(self.current_file.name, self.combo_names.get()))
+            socketclient.sendFileReqTo(self.current_file.name,self.username ,self.current_tab.name)
     def reciveMessageFrom(self, msg):
         pass
 
@@ -368,11 +367,13 @@ class MainApp(Frame):
             self.current_file = None
 
     def deleteDirectory(self):
-        '''
         if self.current_file != None:
             os.remove(self.current_file.path)
-        '''
-        print("enviando la info jajaj")
+
+        
+    
+    def sendTree(self):
+        print("enviando la info jajaj")   
         socketclient.sendFileTree(FileTree.createFromPath(self.rootPath).toJSON())
 
 
@@ -390,6 +391,7 @@ class MainApp(Frame):
         tabIndex = event.widget.index("current")
         print("toy en la tab", tabIndex)
         self.current_tab = self.tabs[tabIndex]
+        socketclient.sendSignalTo(self.current_tab.name)
         print(self.tabs[0].name)
     
     def popupmsg(self, error, msg):

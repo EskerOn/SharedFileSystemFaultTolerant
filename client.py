@@ -53,7 +53,7 @@ class Client():
     def reciveMessage(self):
         while True :
             try:
-                print("recibiendo mensajes")
+                #print("recibiendo mensajes")
                 message = self.client.recv(8192)
                 message = decodeJSON(message)
                 if message['type'] == messageType['login']:
@@ -93,6 +93,11 @@ class Client():
                     print("me llego el backup: {}".format(self.backup))
                 if message['type'] == messageType['update']:
                     self.updateDir(message['target'], message['content'])
+                if message['type'] == messageType['upsignal']:
+                    self.window.sendTree()
+                if message['type'] == messageType['filesend']:
+                    info=message['content'].split("#")
+                    self.sendRequestFile(self.window.rootPath+"\\"+info[0], info[1])
             except socket.error:
                 self.repair()
             except ValueError:
@@ -194,7 +199,20 @@ class Client():
             print("Envío solicitud")
         except socket.error:
             self.repair()
-
+    def sendSignalTo(self, destino):
+        try:
+            self.client.send(encodeJSON(messageType['upsignal'], destino))
+            print("le voy a pedir update a: {}".format(destino))
+        except socket.error:
+            self.repair()
+    def sendFileReqTo(self,filedir, sender, receiver):
+        aux=filedir+"#"+sender
+        try:
+            print("le voy a pedir archivo a: {}".format(receiver))
+            self.client.send(encodeJSON(messageType['filesend'], aux,receiver))
+            
+        except socket.error:
+            self.repair()
     def updateclients(self):
         return self.clients
 
