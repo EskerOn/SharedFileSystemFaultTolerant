@@ -165,6 +165,13 @@ class Server():
                         reciver = self.getUserFromName(reciver)
                         self.clientsSem.release()
                         reciver.send(encodeJSON(messageType['filesend'], message['content']))
+                elif messagetype == messageType['remotedel']:
+                        print("recibo el delete")
+                        reciver=message['target']
+                        self.clientsSem.acquire()
+                        reciver = self.getUserFromName(reciver)
+                        self.clientsSem.release()
+                        reciver.send(encodeJSON(messageType['remotedel'], message['content']))
             except:
                 pass
 

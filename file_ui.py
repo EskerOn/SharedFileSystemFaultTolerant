@@ -341,7 +341,6 @@ class MainApp(Frame):
     
     def requestFileFrom(self):
         if self.current_file != None:
-            print("Se enviara el archivo {} al destino {}".format(self.current_file.name, self.combo_names.get()))
             socketclient.sendFileReqTo(self.current_file.name,self.username ,self.current_tab.name)
     def reciveMessageFrom(self, msg):
         pass
@@ -367,8 +366,12 @@ class MainApp(Frame):
             self.current_file = None
 
     def deleteDirectory(self):
-        if self.current_file != None:
-            os.remove(self.current_file.path)
+        if self.current_tab.name==self.username:
+            if self.current_file != None:
+                os.remove(self.current_file.path)
+                socketclient.sendFileTree(FileTree.createFromPath(self.rootPath).toJSON())
+        else:
+            socketclient.remoteDelete(self.current_file.path,self.current_tab.name)
 
         
     

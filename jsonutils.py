@@ -11,7 +11,8 @@ messageType = {
     'back' : 7,
     'update' : 8,
     'upsignal' : 9,
-    'filesend' : 10
+    'filesend' : 10,
+    'remotedel' :11
 }
 
 def decodeJSON(message):

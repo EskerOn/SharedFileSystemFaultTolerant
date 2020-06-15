@@ -34,7 +34,7 @@ class Client():
         self.window = None
         self.user = ""
         self.online_clients = "None"
-        self.file_udp = None
+        self.file_TCP = None
         self.backup=[]
         self.clients=[]
         self.clients_comps = []
@@ -71,7 +71,7 @@ class Client():
                     print("llego la petición")
                     if "OK" in message['content']:
                         _, ip_h, port_h = message['content'].split("-")                        
-                        senderThread = threading.Thread(target=self.createUDPSender, args= (ip_h, port_h))
+                        senderThread = threading.Thread(target=self.createTCPSender, args= (ip_h, port_h))
                         senderThread.start()
                         senderThread.join()
                     elif "NO" in message['content']:
@@ -81,7 +81,7 @@ class Client():
                         Notitfication("Solicitud de tranferencia de archivo", message['content'])
                         if self.window.askmsg("Aviso!", message['content']):
                             port_tcp = 5001
-                            reciverThread = threading.Thread(target=self.createUDPReciver, args= (port_tcp, ))
+                            reciverThread = threading.Thread(target=self.createTCPReciver, args= (port_tcp, ))
                             reciverThread.start()
                             self.client.send(encodeJSON(messageType['request'], "OK-{}".format(port_tcp), message['target']))
                             reciverThread.join()
@@ -98,6 +98,10 @@ class Client():
                 if message['type'] == messageType['filesend']:
                     info=message['content'].split("#")
                     self.sendRequestFile(self.window.rootPath+"\\"+info[0], info[1])
+                if message['type'] == messageType['remotedel']:
+                    print("voy a eliminar"+message['content'])
+                    os.remove(message['content'])
+                    self.window.sendTree()
             except socket.error:
                 self.repair()
             except ValueError:
@@ -117,14 +121,14 @@ class Client():
         else :
             return False
 
-    def createUDPSender(self, ip, port):
+    def createTCPSender(self, ip, port):
         sender = socket.socket()
         sender.connect((ip, int(port)))
-        name = os.path.basename(self.file_udp)
-        filesize = os.path.getsize(self.file_udp)
+        name = os.path.basename(self.file_TCP)
+        filesize = os.path.getsize(self.file_TCP)
         sender.send(f"{name}{SEPARATOR}{filesize}".encode())
         progress = tqdm.tqdm(range(filesize), f"Sending {name}", unit="B", unit_scale=True, unit_divisor=1024)
-        with open(self.file_udp, "rb") as f:
+        with open(self.file_TCP, "rb") as f:
             for _ in progress:
                 # read the bytes from the file
                 bytes_read = f.read(BUFFER_SIZE)
@@ -140,7 +144,7 @@ class Client():
         sender.close()
         print("Se envio por completo")
 
-    def createUDPReciver(self, port):
+    def createTCPReciver(self, port):
         receiver = socket.socket()
         # bind the socket to our local address
         receiver.bind(("0.0.0.0", port))
@@ -194,7 +198,7 @@ class Client():
 
     def sendRequestFile(self, title, destin):
         try:
-            self.file_udp = title
+            self.file_TCP = title
             self.client.send(encodeJSON(messageType['request'], os.path.basename(title), destin))
             print("Envío solicitud")
         except socket.error:
@@ -210,12 +214,15 @@ class Client():
         try:
             print("le voy a pedir archivo a: {}".format(receiver))
             self.client.send(encodeJSON(messageType['filesend'], aux,receiver))
-            
         except socket.error:
             self.repair()
     def updateclients(self):
         return self.clients
-
+    def remoteDelete(self, filedir, client):
+        try:
+            self.client.send(encodeJSON(messageType['remotedel'],filedir,client))
+        except socket.error:
+            self.repair()
     def disconect(self):
         try:
             self.client.send(encodeJSON(messageType['logout']))
