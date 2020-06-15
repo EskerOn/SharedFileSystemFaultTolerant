@@ -160,8 +160,8 @@ class Client():
             return False
 
     def enviarLista(self, tar):
-        time.sleep(1.5)
         while(len(self.cola) > 0):
+            time.sleep(2.0)
             instruction = self.cola.pop()
             try:
                 self.client.send(encodeJSON(messageType['test'], "UY", tar))
