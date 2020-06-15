@@ -31,9 +31,13 @@ def parseArgs():
 class Server():
 
     def __init__(self, port):
+
         self.HOST = "192.168.8.2"
         self.PORT = port
+<<<<<<< HEAD
         self.pro_mode = False
+=======
+>>>>>>> parent of 22fe882... new changes
         self.MAX_CONNECTIONS = 4
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.backupserv=[]
@@ -54,14 +58,9 @@ class Server():
         print("Server en la IP : {} PORT : {} para {} conexiones".format(self.HOST, self.PORT, self.MAX_CONNECTIONS))
         
         self.clients = dict()
-        self.validUsers = ["A","B","C","D"]
-        self.activeNodes = {"A" : False,"B" : False,"C" : False,"D" : False}
-        self.actionList = [[],[],[],[]]        
         #self.rooms = dict()
         self.clientsSem = threading.Lock()
-        self.myThread = threading.Thread(target = self.interface)
-        self.myThread.setDaemon = True
-        self.myThread.start()        
+
         while True :
             try:
                 connection, addr = self.server.accept()
@@ -77,48 +76,36 @@ class Server():
             except (KeyboardInterrupt, SystemError):
                 socket.close()
                 print("Servidor cerrado?")
-                raise            
+                raise
     def sendBackUp(self):
         return self.clients
 
     def clientThread(self, connection, addr):
-        while True:            
+        while True:
             try:
-                message = connection.recv(1024)
+                message = connection.recv(8192)
                 message = decodeJSON(message)
                 messagetype = message['type']
                 #Chose or chage username
-
                 if messagetype == messageType['username']:
                     username = message['content']
                     print("Solicitud de asignacion de usuario <{}>".format(username))
-                    if self.validName(username):
-                        self.clientsSem.acquire()
-                        if self.getUserFromName(username):
-                            connection.send(encodeJSON(messageType['username'], "NOT OK"))
-                            print("Solicitud para el usuario <{}> denegada, usuario ya registrado".format(username))
-                        else :
-                            connection.send(encodeJSON(messageType['username'], "OK"))
-                            print("Solicitud para el usuario <{}> aprobada".format(username))
-                            self.clients[connection] = username
-                            self.broadcast(encodeJSON(messageType['login'], "{}".format(username)), connection)
-                            time.sleep(1.0)
-                            connection.send(encodeJSON(messageType['info'], self.getAllUsers()))
-                            self.broadcast(encodeJSON(messageType['info'], self.getAllUsers()), connection)
-                            connection.send(encodeJSON(messageType['back'], self.getbackup()))
-                            self.broadcast(encodeJSON(messageType['back'], self.getbackup()), connection)
-                            print("Usuario {} registrado".format(username))
-                            self.activeNodes[username] = True
-                            print(self.activeNodes)
-                            if self.pro_mode:
-                                print("KKKKK")
-                                self.myThread = threading.Thread(target = self.restoreFromFall, args=(connection, ))
-                                self.myThread.setDaemon = True
-                                self.myThread.start()
-                        self.clientsSem.release()
-                    else:
+                    self.clientsSem.acquire()
+                    if self.getUserFromName(username):
                         connection.send(encodeJSON(messageType['username'], "NOT OK"))
                         print("Solicitud para el usuario <{}> denegada, usuario ya registrado".format(username))
+                    else :
+                        connection.send(encodeJSON(messageType['username'], "OK"))
+                        print("Solicitud para el usuario <{}> aprobada".format(username))
+                        self.clients[connection] = username
+                        self.broadcast(encodeJSON(messageType['login'], "{}".format(username)), connection)
+                        time.sleep(1.0)
+                        connection.send(encodeJSON(messageType['info'], self.getAllUsers()))
+                        self.broadcast(encodeJSON(messageType['info'], self.getAllUsers()), connection)
+                        connection.send(encodeJSON(messageType['back'], self.getbackup()))
+                        self.broadcast(encodeJSON(messageType['back'], self.getbackup()), connection)
+                        print("Usuario {} registrado".format(username))
+                    self.clientsSem.release()
                 #chatroom
                 elif messagetype == messageType['request']:
                     #self.backup(encodeJSON(messageType['back'], self.getbackup()))
@@ -158,84 +145,6 @@ class Server():
                         connection.send(encodeJSON(messageType['info'], self.getAllUsers()))
                         self.clientsSem.release()
                         time.sleep(0.5)
-                #test
-                elif messagetype == messageType['test']:
-                    if "SY" in message['content']:
-                        print("Nodo activo: {}. Tomando acción necesaria.".format(self.activeNodes[message['target']]))
-                        if (self.activeNodes[message['target']]):
-                            print("Establecer conexión con: {}".format(message['target']))
-                            print(self.validUsers.index(message['target']))                        
-                            reciver = message['target']
-                            self.clientsSem.acquire()
-                            reciver = self.getUserFromName(reciver)
-                            self.clientsSem.release()
-                            if reciver :
-                                try:
-                                    reciver.send(encodeJSON(messageType['test'], "SY", self.clients[connection]))
-                                    print("Enviando solicitud de [{}] al usuario [{}]".format(self.clients[connection], self.clients[reciver]))
-                                except :
-                                    connection.send(encodeJSON(messageType['error'], ">Failed to send message to {}".format(message['target'])))                        
-                        else:                                                
-                            reciver = self.getVecino(message['target'])
-                            self.clientsSem.acquire()
-                            reciver = self.getUserFromName(reciver)
-                            self.clientsSem.release()
-                            if reciver :
-                                try:
-                                    reciver.send(encodeJSON(messageType['test'], "SV", self.clients[connection]))
-                                    print("Enviando solicitud de [{}] al usuario [{}]".format(self.clients[connection], self.clients[reciver]))
-                                except :
-                                    connection.send(encodeJSON(messageType['error'], ">Failed to send message to {}".format(message['target'])))
-                    elif "UV" in message['content']:
-                        print("Nodo activo: {}. Tomando acción necesaria.".format(self.activeNodes[self.getVecino(self.clients[connection])]))
-                        if (self.activeNodes[self.getVecino(self.clients[connection])]):
-                            print("Establecer conexión con: {}".format(self.getVecino(self.clients[connection])))
-                            print(self.validUsers.index(self.getVecino(self.clients[connection])))
-                            reciver = self.getVecino(self.clients[connection])
-                            self.clientsSem.acquire()
-                            reciver = self.getUserFromName(reciver)
-                            self.clientsSem.release()
-                            if reciver :
-                                try:
-                                    reciver.send(encodeJSON(messageType['test'], "UV", self.clients[connection]))
-                                    print("Enviando solicitud de [{}] al usuario [{}]".format(self.clients[connection], self.clients[reciver]))
-                                except :
-                                    connection.send(encodeJSON(messageType['error'], ">Failed to send message to {}".format(message['target'])))                        
-                        else:                                                
-                            reciver = self.getVecino(message['target'])
-                            self.clientsSem.acquire()
-                            reciver = self.getUserFromName(reciver)
-                            self.clientsSem.release()
-                            if reciver :
-                                try:
-                                    reciver.send(encodeJSON(messageType['test'], "NS", self.clients[connection]))
-                                    print("Enviando solicitud de [{}] al usuario [{}]".format(self.clients[connection], self.clients[reciver]))
-                                except :
-                                    connection.send(encodeJSON(messageType['error'], ">Failed to send message to {}".format(message['target'])))
-                    elif "UY" in message['content']:
-                        print("Establecer conexión con: {}".format(message['target']))
-                        print(self.validUsers.index(message['target']))                        
-                        reciver = message['target']
-                        self.clientsSem.acquire()
-                        reciver = self.getUserFromName(reciver)
-                        self.clientsSem.release()
-                        if reciver :
-                            try:
-                                reciver.send(encodeJSON(messageType['test'], "UY", self.clients[connection]))
-                                print("Enviando solicitud de [{}] al usuario [{}]".format(self.clients[connection], self.clients[reciver]))
-                            except :
-                                connection.send(encodeJSON(messageType['error'], ">Failed to send message to {}".format(message['target'])))
-                    elif "LP" in message['content']:                        
-                        reciver = self.getVecino(self.clients[connection])
-                        self.clientsSem.acquire()
-                        reciver = self.getUserFromName(reciver)
-                        self.clientsSem.release()
-                        if reciver :
-                            try:
-                                reciver.send(encodeJSON(messageType['test'], "LP", self.clients[connection]))
-                                print("Solicitando lista de pendientes de {} a {}".format(self.clients[connection], self.getVecino(self.clients[connection])))
-                            except :
-                                connection.send(encodeJSON(messageType['error'], ">Failed to send message to {}".format(self.clients[connection])))
                 #logout
                 elif messagetype == messageType['logout']:
                     self.clientsSem.acquire()
@@ -244,48 +153,31 @@ class Server():
                     self.broadcast(encodeJSON(messageType['logout'], "{}".format(username)), connection)
                     self.clientsSem.release()
                     break
+
+                elif messagetype == messageType['update']:
+                    print("Tratando de enviar la actualizacion")
+                    self.broadcast(encodeJSON(message['type'], message['content'], message['target']), connection)
+                elif messagetype == messageType['upsignal']:
+                        reciver=message['content']
+                        self.clientsSem.acquire()
+                        reciver = self.getUserFromName(reciver)
+                        self.clientsSem.release()
+                        reciver.send(encodeJSON(messageType['upsignal']))
+                elif messagetype == messageType['filesend']:
+                        reciver=message['target']
+                        self.clientsSem.acquire()
+                        reciver = self.getUserFromName(reciver)
+                        self.clientsSem.release()
+                        reciver.send(encodeJSON(messageType['filesend'], message['content']))
+                elif messagetype == messageType['remotedel']:
+                        print("recibo el delete")
+                        reciver=message['target']
+                        self.clientsSem.acquire()
+                        reciver = self.getUserFromName(reciver)
+                        self.clientsSem.release()
+                        reciver.send(encodeJSON(messageType['remotedel'], message['content']))
             except:
-                print("Conexión perdida con: {}".format(username))
-                self.removeUser(connection)
-                break;
                 pass
-        self.activeNodes[username] = False
-        print(self.activeNodes)
-
-    def validName(self, username):
-        for user in self.validUsers:
-            if user == username:
-                return True;
-        return False
-
-    def allOnline(self):
-        return (self.activeNodes["A"] and self.activeNodes["B"] and self.activeNodes["C"] and self.activeNodes["D"])
-
-    def restoreFromFall(self, tar):
-        time.sleep(4.0)
-        tar.send(encodeJSON(messageType['test'], "RFF", self.getVecino(self.clients[tar])))
-
-    def interface(self):
-        while True:
-            aux = input("[Server]: ")
-            if aux == "backup":
-                self.copiar()                
-            elif aux == "pro_mode 1":
-                print("Modo pro activado")
-                self.pro_mode = True;
-            elif aux == "pro_mode 0":
-                print("Modo pro desactivado")
-                self.pro_mode = False;
-    def copiar(self):
-        for connection, user in self.clients.items():
-            try:
-                connection.send(encodeJSON(messageType['test'], "CA", self.getVecino(self.clients[connection]) ) )
-                print("{} iniciando copias a: {}".format(self.clients[connection], self.getVecino(self.clients[connection]) ) )
-            except :
-                print("Falla crítica en copias")
-
-    def getVecino(self, nodo):
-        return self.validUsers[(self.validUsers.index(nodo) + 1) % 4]
 
     def getUserFromName(self, username):
         for connection, user in self.clients.items():
@@ -304,8 +196,6 @@ class Server():
         for client in disconectedClienst:
             self.removeUser(client)
     
-    #def actionList(self, action):
-
     def backup(self, message):
         disconectedClienst = []
         for client in self.clients :
@@ -339,7 +229,8 @@ class Server():
             return usern
         else :
             return "ws"
-
-if __name__ == "__main__":
+if __name__ == "__main__":           
     parseArgs()
     server = Server(int(port))
+                        
+

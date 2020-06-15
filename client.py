@@ -9,6 +9,7 @@ import os
 import random
 import tqdm
 import _thread
+import json
 from server import Server
 SEPARATOR = "<SEPARATOR>"
 connected = True
@@ -33,16 +34,16 @@ class Client():
         self.window = None
         self.user = ""
         self.online_clients = "None"
-        self.file_udp = None
+        self.file_TCP = None
         self.backup=[]
         self.clients=[]
-        self.cola=[]
+        self.clients_comps = []
         try:
             self.client.connect((self.HOST, self.PORT))
             print("[SERVER]: Conexion establecida")
         except socket.error:
             print("constructor error")
-        #_thread.start_new_thread(Server, (2000, ))
+        _thread.start_new_thread(Server, (2000, ))
 
     def startListenServer(self):
         self.reciver = threading.Thread(target=self.reciveMessage)
@@ -52,8 +53,8 @@ class Client():
     def reciveMessage(self):
         while True :
             try:
-                print("recibiendo mensajes")
-                message = self.client.recv(1024)
+                #print("recibiendo mensajes")
+                message = self.client.recv(8192)
                 message = decodeJSON(message)
                 if message['type'] == messageType['login']:
                     Notitfication("Usuario conectado", "El usuario {} se ha conectado con el servidor".format(message['content']))   
@@ -70,7 +71,7 @@ class Client():
                     print("llego la petición")
                     if "OK" in message['content']:
                         _, ip_h, port_h = message['content'].split("-")                        
-                        senderThread = threading.Thread(target=self.createUDPSender, args= (ip_h, port_h))
+                        senderThread = threading.Thread(target=self.createTCPSender, args= (ip_h, port_h))
                         senderThread.start()
                         senderThread.join()
                     elif "NO" in message['content']:
@@ -80,7 +81,7 @@ class Client():
                         Notitfication("Solicitud de tranferencia de archivo", message['content'])
                         if self.window.askmsg("Aviso!", message['content']):
                             port_tcp = 5001
-                            reciverThread = threading.Thread(target=self.createUDPReciver, args= (port_tcp, ))
+                            reciverThread = threading.Thread(target=self.createTCPReciver, args= (port_tcp, ))
                             reciverThread.start()
                             self.client.send(encodeJSON(messageType['request'], "OK-{}".format(port_tcp), message['target']))
                             reciverThread.join()
@@ -90,43 +91,17 @@ class Client():
                     self.backup=message['content'].split()
                     time.sleep(0.5)
                     print("me llego el backup: {}".format(self.backup))
-                if message['type'] == messageType['test']:
-                    if "SY" in message['content']:
-                        print("Set en mis datos")
-                        try:
-                            self.client.send(encodeJSON(messageType['test'], "UV", ""))
-                            print("Enviando solicitud de actualización de respaldo a vecino")
-                        except :
-                            print("Falla crítica")
-                    elif "SV" in message['content']:
-                        print("Set en los datos del vecino, añadida accion a la cola")
-                        self.cola.append(message)
-                        print(self.cola)
-                    elif "UY" in message['content']:
-                        print("Actualizando datos con los datos del respaldo de vecino")  
-                        self.myThread = threading.Thread(target = self.atenderSolicitudFinal)
-                        self.myThread.setDaemon = True
-                        self.myThread.start()
-                    elif "UV" in message['content']:
-                        print("Actualizando datos de respaldo del vecino")
-                    elif "CA" in message['content']:
-                        print("Mandando datos a vecino: {}".format(message['target']))
-                    elif "LP" in message['content']:
-                        print("Accediendo a lista de pendientes de: {}".format(message['target']))
-                        if len(self.cola) > 0:
-                            self.myThread = threading.Thread(target = self.enviarLista, args=(message['target'], ))
-                            self.myThread.setDaemon = True
-                            self.myThread.start()
-                    elif "RFF" in message['content']:
-                        print("Restaurando de caída: {}".format(message['target']))                        
-                        try:
-                            self.client.send(encodeJSON(messageType['test'], "LP", ""))
-                            print("Enviando solicitud de acceso a respaldo a vecino")
-                        except :
-                            print("Falla crítica")
-                    else:
-                        print("simón, ya escuché")
-                    time.sleep(0.5)
+                if message['type'] == messageType['update']:
+                    self.updateDir(message['target'], message['content'])
+                if message['type'] == messageType['upsignal']:
+                    self.window.sendTree()
+                if message['type'] == messageType['filesend']:
+                    info=message['content'].split("#")
+                    self.sendRequestFile(self.window.rootPath+"\\"+info[0], info[1])
+                if message['type'] == messageType['remotedel']:
+                    print("voy a eliminar"+message['content'])
+                    os.remove(message['content'])
+                    self.window.sendTree()
             except socket.error:
                 self.repair()
             except ValueError:
@@ -145,24 +120,15 @@ class Client():
             return True
         else :
             return False
-    def enviarLista(self, tar):
-        time.sleep(1.5)
-        while(len(self.cola) > 0):
-            instruction = self.cola.pop()
-            try:
-                self.client.send(encodeJSON(messageType['test'], "UY", tar))
-                print("Enviando instruccion")
-            except :
-                print("Falla crítica")
 
-    def createUDPSender(self, ip, port):
+    def createTCPSender(self, ip, port):
         sender = socket.socket()
         sender.connect((ip, int(port)))
-        name = os.path.basename(self.file_udp)
-        filesize = os.path.getsize(self.file_udp)
+        name = os.path.basename(self.file_TCP)
+        filesize = os.path.getsize(self.file_TCP)
         sender.send(f"{name}{SEPARATOR}{filesize}".encode())
         progress = tqdm.tqdm(range(filesize), f"Sending {name}", unit="B", unit_scale=True, unit_divisor=1024)
-        with open(self.file_udp, "rb") as f:
+        with open(self.file_TCP, "rb") as f:
             for _ in progress:
                 # read the bytes from the file
                 bytes_read = f.read(BUFFER_SIZE)
@@ -178,11 +144,15 @@ class Client():
         sender.close()
         print("Se envio por completo")
 
+<<<<<<< HEAD
     def atenderSolicitudFinal(self):
         time.sleep(5.0)
         print("Solicitud procesada exitosamente")
 
     def createUDPReciver(self, port):
+=======
+    def createTCPReciver(self, port):
+>>>>>>> parent of 22fe882... new changes
         receiver = socket.socket()
         # bind the socket to our local address
         receiver.bind(("0.0.0.0", port))
@@ -223,6 +193,10 @@ class Client():
     def setWindow(self, win):
         print("ventana añadida")
         self.window = win
+
+    def updateDir(self, user, tree):
+        self.window.updateDir(user, json.loads(tree))
+
     def updateList(self, received):
         for element in received:
             if element in self.clients:
@@ -232,23 +206,31 @@ class Client():
 
     def sendRequestFile(self, title, destin):
         try:
-            self.file_udp = title
+            self.file_TCP = title
             self.client.send(encodeJSON(messageType['request'], os.path.basename(title), destin))
             print("Envío solicitud")
         except socket.error:
             self.repair()
-
-    def testEnvio(self, dest, mode):
-        try:            
-            self.client.send(encodeJSON(messageType['test'], mode,target=dest))
-            print("Solicito a servidor comunicación con: {}".format(dest))
+    def sendSignalTo(self, destino):
+        try:
+            self.client.send(encodeJSON(messageType['upsignal'], destino))
+            print("le voy a pedir update a: {}".format(destino))
         except socket.error:
-            print("f")
             self.repair()
-
+    def sendFileReqTo(self,filedir, sender, receiver):
+        aux=filedir+"#"+sender
+        try:
+            print("le voy a pedir archivo a: {}".format(receiver))
+            self.client.send(encodeJSON(messageType['filesend'], aux,receiver))
+        except socket.error:
+            self.repair()
     def updateclients(self):
         return self.clients
-
+    def remoteDelete(self, filedir, client):
+        try:
+            self.client.send(encodeJSON(messageType['remotedel'],filedir,client))
+        except socket.error:
+            self.repair()
     def disconect(self):
         try:
             self.client.send(encodeJSON(messageType['logout']))
@@ -281,7 +263,11 @@ class Client():
                 time.sleep( 2 )
 
     def sendFileTree(self, tree):
-        pass
+        print("Enviando")
+        test = encodeJSON(messageType['update'], json.dumps(tree), self.user)
+        print(sys.getsizeof(test))
+        self.client.send(test)
+        print("Enviado")
         
     
     def setUserName(self, username):
