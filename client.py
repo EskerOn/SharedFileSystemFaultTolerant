@@ -211,7 +211,7 @@ class Client():
         # start receiving the file from the socket
         # and writing to the file stream
         progress = tqdm.tqdm(range(filesize), f"Receiving {name}", unit="B", unit_scale=True, unit_divisor=1024)
-        folder_path = os.getcwd() + "\\recived_files\\"
+        folder_path = self.window.rootPath+"\\"
         file_name = folder_path + name
         with open(file_name, "wb") as f:
             for _ in progress:
