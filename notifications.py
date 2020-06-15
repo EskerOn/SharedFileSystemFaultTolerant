@@ -2,7 +2,7 @@ import os
 from plyer import notification
 import threading
 
-ICON_PATH = os.getcwd() + "\\favicon.ico"
+ICON_PATH = os.getcwd() + "\\res\\favicon.ico"
 
 class Notitfication():
     def __init__(self, title, content):
